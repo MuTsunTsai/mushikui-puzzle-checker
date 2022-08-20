@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta http-equiv="content-type" content="text/html; charset=Big5">
+		<script type="text/javascript" src="chessEngine.js"></script>
+		<style type="text/css">
+			#M1, #M2	{ position:absolute; top:0px; left:0px; display:none;
+						height:26px; width:26px; background:blue; opacity:0.3; filter:alpha(opacity=30);}
+			#B			{ width:210px; height:210px; position:absolute; top:0px; left:0px;
+						background:black; opacity:0; filter:alpha(opacity=0);}
+		</style>
+	<body>
+		<table>
+		<tr><td width=250>
+			<div style="width:210px; height:210px; position:relative;">
+				<img id="I" src="http://www.abstreamace.com/php-tool/fen/1.php?fen=rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR">
+				<div id="M1"></div><div id="M2"></div>
+				<div id="B" onMouseMove="omm()" onMouseOut="omo()" onMouseUp="omu()"></div>
+			</div>
+			<td width=110><div id="D"></div>
+				<input type="button" value="retract" onClick="retract()" onDblClick="retract()" style="margin-top:10px;">
+				<input type="button" value="new" onClick="newGame()" onDblClick="newGame()" style="margin-top:10px;">
+			<td valign="top"><div id="G"></div>
+		</table>
+
+		<script type="text/javascript">
+			function omu() {
+				var x=Math.floor((event.offsetX-1)/26);
+				var y=Math.floor((event.offsetY-1)/26);
+				if(selected) {
+					selected=false; omm();
+					if(x!=X||y!=Y) for(var i=0;i<EN.legalMovesSys.length;i++)
+						if(EN.legalMovesSys[i][0]==Y&&EN.legalMovesSys[i][1]==X&&
+							EN.legalMovesSys[i][2]==y-Y&&EN.legalMovesSys[i][3]==x-X)
+							play(i);
+				} else {
+					if(side(EN.position[y][x])!=EN.whoseMove) return;
+					selected=true; X=x; Y=y; omm();
+				}
+			}
+			function omm() {
+				var x=Math.floor((event.offsetX-1)/26);
+				var y=Math.floor((event.offsetY-1)/26);
+				var M=selected?M2:M1;
+				M1.style.display="block";
+				M2.style.display=(selected?"block":"none");
+				M.style.posLeft=x*26+1;
+				M.style.posTop=y*26+1;
+			}
+			function omo() {
+				if(!selected) M1.style.display="none";
+				M2.style.display="none";
+			}
+			function play(i) { EN.play(i); update();}
+			function retract() { EN.retract(); update();}
+			function newGame() {
+				EN=new chessEngine("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+				update();
+			}
+			function update() {
+				var i, t="<select onChange='play(this.value)' size=10 style='width:80px;'>";
+				for(i=0;i<EN.legalMoves.length;i++)
+					t+="<option value='"+i+"'>"+EN.legalMoves[i]+"</option>";
+				t+="</select>";
+				D.innerHTML=t;
+				G.innerHTML=EN.toFEN()+"<br><br>"+EN.PGN();
+				I.src="http://www.abstreamace.com/php-tool/fen/1.php?fen="+EN.toFEN();
+			}
+			var EN, selected=false, X, Y;
+			newGame();
+		</script>
+		

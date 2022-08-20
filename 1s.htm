@@ -1,0 +1,80 @@
+<html>
+
+<head>
+<title>Mushikui Puzzle Checker</title>
+
+<script type="text/javascript" src="chessEngine.js"></script>
+
+<body>
+
+FEN:<br>
+<input type="text" id="F" size=70 value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"><br><br>
+
+<textArea id="D" rows=10 cols=50>1. ** ** 2. **** **** 3. **** **** 4. *** **** 5. *** ***** 6. **** ***** 7. ****</textArea>
+<input type="button" value="Search Pattern" onClick="read2();">
+<input type="button" value="Stop" onClick="STOP=true;">
+<div id="S"></div><br>
+<div id="O"></div>
+
+<script type="text/javascript">
+	
+	// 主程式
+
+	function searchPattern(a) {	// 參數：a 代表每一步字串長度的序列
+		EN=new chessEngine(F.value);
+		i=0; j=new Array(); j[i]=0; c=0; goal=a;
+		O.innerHTML="";
+		setTimeout("run()", 0);
+	}
+	function run() {
+		if(STOP) return;
+		if(i==goal.length) {
+			O.innerHTML+=EN.PGN()+"<br>"+EN.toFEN()+"<br>";
+			//O.innerHTML+=EN.PGN()+"<br>";
+			EN.retract(); i--; c++; j[i]++;
+		}
+		L=EN.legalMoves;
+		while(j[i]<L.length&&L[j[i]].length!=goal[i]) j[i]++;
+		if(j[i]==L.length) {
+			if(i==0) { endrun(); return;}
+			else { EN.retract(); i--; j[i]++;}
+		} else {
+			EN.play(j[i]); i++; j[i]=0;
+			//if(EN.PGN()=="1.d4 c5 2.dxc5 Qa5+ 3.b4 Qxb4+ 4.c3 Qxc3+ 5.Nxc3 d5 6.Qa4+ b5 ") {O.innerHTML+=EN.toFEN()+" "+EN.legalMoves+"<br>"; }
+		}
+		TOC++;
+		if(TOC==TOL) { S.innerHTML=EN.PGN(); setTimeout("run()", 0); TOC=0;}
+		else run();
+	}
+	function endrun() {
+		if(c==0) O.innerHTML="There's no solution to this pattern.";
+		else O.innerHTML+="<br>"+c+" solution(s) exist to this pattern.";
+	}
+	var EN, i, j, c, goal;
+
+	var TOC, TOL=100, STOP;
+
+	// var test=false;
+
+	// 資料載入
+
+	function read() {
+	}
+	function read2() {
+		var t=D.value, i;
+		t=t.match(/\*+/g); TOC=0; STOP=false;
+		if(t.length==0) O.innerHTML="Pattern error.";
+		else {
+			for(i=0;i<t.length;i++) t[i]=t[i].length;
+			searchPattern(t);
+		}
+	}
+	function checkFEN(t) {
+		return t.match(/([prnbqkPRNBQK1-8]{1,8}\/){7}[prnbqkPRNBQK1-8]{1,8} (w|b) (-|[KQkq]{1,4}) (-|[a-h][36]) \d+ \d+/);
+	}
+	var D=document.getElementById("D");
+	var S=document.getElementById("S");
+	var O=document.getElementById("O");
+
+</script>
+

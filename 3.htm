@@ -1,0 +1,113 @@
+<html>
+
+<head>
+<title>Mushikui Puzzle Checker</title>
+
+<script type="text/javascript" src="chessEngine.js"></script>
+
+<body>
+
+FEN:<br>
+<input type="text" id="F" size=70 value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"><br><br>
+
+<textArea id="D" rows=10 cols=50>**
+***
+****
+*****
+******
+*******</textArea>
+<input type="button" value="Search Pattern" onClick="read2();">
+<textArea id="A" rows=10 cols=50></textArea>
+<input type="button" value="append" onClick="read();">
+<div id="S"></div><br>
+<div id="O"></div>
+
+<script type="text/javascript">
+
+	function read() {
+		var a=["**","***","****","*****","******","*******"], b;
+		var l=3, i, j, r;
+		D.value="";
+		r=A.value.split("\n");
+		while(!r[r.length-1].match(/\*+/)) r.pop();
+		for(i=0;i<r.length;i++) {
+			r[i]=r[i].replace(/\s+$/, "");
+			r[i]=r[i].split(" ");
+		}
+		l=r.length;
+		for(i=0;i<l;i++) {
+			b=r.shift();
+			for(j=0;j<a.length;j++) r.push(b.concat(a[j]));
+		}
+		for(i=0;i<r.length;i++) {
+			r[i]=r[i].join(" ");
+			D.value+=r[i]+"\n";
+		}
+	}
+	
+
+	// 主程式
+
+	function doNext() {
+		ListIndex++;
+		S.innerHTML=((List.length?ListIndex*100/List.length:100)+"").substr(0,5)+"%";
+		if(ListIndex==List.length) {
+			O.innerHTML+=(C?"Found "+C+" sequences.":"No sequence found.");
+			return;
+		}
+		var t=List[ListIndex].match(/\*+/g);
+		if(t&&t.length) {
+			for(var i=0;i<t.length;i++) t[i]=t[i].length;
+			searchPattern(t);
+		} else doNext();
+	}
+	function searchPattern(a) {	// 參數：a 代表每一步字串長度的序列
+		EN=new chessEngine(F.value);
+		i=0; j=new Array(); j[i]=0; c=0; goal=a;
+		setTimeout("run()", 0);
+	}
+	function run() {
+		if(i==goal.length) {
+			EN.retract(); i--; c++; j[i]++;
+			if(c>1) { endrun(); return;}
+		}
+		L=EN.legalMoves;
+		while(j[i]<L.length&&L[j[i]].length!=goal[i]) j[i]++;
+		if(j[i]==L.length) {
+			if(i==0) { endrun(); return;}
+			else { EN.retract(); i--; j[i]++;}
+		} else {
+			EN.play(j[i]); i++; j[i]=0;
+			//if(EN.PGN()=="1.d4 c5 2.dxc5 Qa5+ 3.b4 Qxb4+ 4.c3 Qxc3+ 5.Nxc3 d5 6.Qa4+ b5 ") {O.innerHTML+=EN.toFEN()+" "+EN.legalMoves+"<br>"; }
+		}
+		//S.innerHTML=EN.PGN();
+		TOC++;
+		if(TOC==TOL) { setTimeout("run()", 0); TOC=0;}
+		else run();
+	}
+	function endrun() {
+		if(c==1) { O.innerHTML+=List[ListIndex]+"<br>"; C++;}
+		if(c) A.value+=List[ListIndex]+"\n";
+		doNext();
+	}
+	var EN, i, j, c, C, goal;
+
+	var List, ListIndex;
+
+	var TOC, TOL=1000;
+
+	// var test=false;
+
+	// 資料載入
+
+	function read2() {
+		List=D.value.split("\n");
+		ListIndex=-1; C=0;
+		O.innerHTML=""; A.value=""; TOC=0;
+		doNext();
+	}
+	var D=document.getElementById("D");
+	var A=document.getElementById("A");
+	var F=document.getElementById("F");
+
+</script>
